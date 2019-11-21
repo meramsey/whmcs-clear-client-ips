@@ -1,4 +1,6 @@
-Here is how to clear your WHMCS client last login IP’s and host entries automatically for privacy.
+**Here is how to clear your WHMCS client last login IP’s and host entries automatically for privacy.**
+
+[https://whattheserver.com/whmcs-client-last-login-ip-log-clearing-script/](https://whattheserver.com/whmcs-client-last-login-ip-log-clearing-script/)
 
 Probably not a popular modification, but running a security and privacy company we wanted to automate and prevent any unnecessary logging being done when clients login to the billing/support center.
 
@@ -13,26 +15,50 @@ To create the bash script manually:
 
 This can be done via SSH via nano
 
-nano whmcs-client-clear-ip.sh
+`nano whmcs-client-clear-ip.sh`
 
 Or via the cPanel FileManager create a new file named “whmcs-client-clear-ip.sh”
 
 With the below lines:
 
-#!/bin/sh
+```
+#!/bin/bash
+## Author: Michael Ramsey
+## Objective: WHMCS client last login ip log clearing script
+## https://whattheserver.com/whmcs-client-last-login-ip-log-clearing-script/
+## https://gitlab.com/mikeramsey/whmcs-clear-client-ips
+## How to use.
+# ./whmcs-client-clear-ip.sh
+# sh whmcs-client-clear-ip.sh
+# How to setup as a cron
+# * * * * * /bin/sh /home/username/whmcs-client-clear-ip.sh >/dev/null 2>&1
+
+#Configure here
+DB="database_name"
+DBUSER="database_username"
+DBPASS="Passwordhere"
+#Stop configuring
+
+
 #Clear clients last login IP address in table tblclients > ip,host
-/usr/bin/mysql -h "localhost" -u "database_username" "-pPasswordhere" -e "UPDATE tblclients SET ip = '', host = ''" database_name
+#/usr/bin/mysql -h "localhost" -u "database_username" "-pPasswordhere" -e "UPDATE tblclients SET ip = '', host = ''" database_name
+
+/usr/bin/mysql -h "localhost" -u "$DBUSER" "-p$DBPASS" -e "UPDATE tblclients SET ip = '', host = ''" $DB
 
 #Clear Order Ipaddress in table tblorders > ipaddress
-/usr/bin/mysql -h "localhost" -u "database_username" "-pPasswordhere" -e "UPDATE tblorders SET ipaddress = ''" database_name
+#/usr/bin/mysql -h "localhost" -u "database_username" "-pPasswordhere" -e "UPDATE tblorders SET ipaddress = ''" database_name
+
+/usr/bin/mysql -h "localhost" -u "$DBUSER" "-p$DBPASS" -e "UPDATE tblorders SET ipaddress = ''" $DB
+```
+
 
 Then in the cPanel cronjobs or via ssh “crontab -e” add the below cronjob to clear this every minute.
 
-* * * * * /bin/sh /home/username/whmcs-client-clear-ip.sh >/dev/null 2>&1
+`* * * * * /bin/sh /home/username/whmcs-client-clear-ip.sh >/dev/null 2>&1`
 
 To test if it’s working I recommend setting it to every 5 minutes like the below.
 
-*/5 * * * * /bin/sh /home/username/whmcs-client-clear-ip.sh >/dev/null 2>&1
+`*/5 * * * * /bin/sh /home/username/whmcs-client-clear-ip.sh >/dev/null 2>&1`
 
 Then log in to a test account to generate a last login whmcs entry to that client in the database. Check it exists by going to your whmcs_database »Table: tblclients and look at the “ip” and “host” columns to the far right. If you see its there then you know you have an entry it will clear. See example below
 
